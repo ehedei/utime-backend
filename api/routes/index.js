@@ -1,8 +1,13 @@
+const { userRouter } = require('./user.router')
+
 const router = require('express').Router()
 const { bookingRouter } = require('./booking.router')
 const { appointmentRouter } = require('./appointment.router')
 const { doctorRouter } = require('./doctor.router')
 
+router
+  .use('/user', userRouter)
+//  .use('/auth')
 
 router
   .use('/booking', bookingRouter)
