@@ -49,22 +49,36 @@ _\*User only gets own bookings_
 |-|-|-|-|-|-|-|
 |GET|**/appointment** |Get a list of all Appointments|Admin, Op, User|-|List with all Appointments|-|
 |GET|**/appointment/:appointmentId** |Get a Appointment by appointmentId|Admin, Op|-|Appointment|-|
-|POST|**/appointment**|Register a new Appointment in the App|Admin, Op|**resource**, **start**, **end**, booking|Appointment created|-|
-|PUT|**/appointment/:appointmentId**|Update a Appointment by id|Admin, Op|resource, start, end|Appointment updated|-|
+|POST|**/appointment**|Register a new Appointment in the App|Admin, Op|**doctor**, **start**, **end**, booking|Appointment created|-|
+|PUT|**/appointment/:appointmentId**|Update a Appointment by id|Admin, Op|doctor, start, end|Appointment updated|-|
 |DELETE|**/appointment/:appointmentId** |Delete an Appointment by appointmentId|Admin|-|Deleted Appointment|-
 
 ##
 <br>
 
-- ### Resource
+- ### Doctor
 
 |Verb|Route|Description|Auth.|Body Params|Returns|Notes|
 |-|-|-|-|-|-|-|
-|GET|**/resource** |Get a list of all Resources|Admin, Op, User|-|List with all Resources|-
-|GET|**/resource/:resourceId** |Get a Resource by Id|Admin, Op, User|-|Resource|-
-|POST|**/resource** |Create a new Resource |Admin|**name**|Created Resource|-
-|PUT|**/resource/:resourceId** |Update a Resource by Id|Admin|name|Updated Resource|-
-|DELETE|**/resource/:resourceId** |Delete a Resource by resourceId|Admin|-|Deleted resource|-
+|GET|**/doctor** |Get a list of all Doctors|Admin, Op, User|-|List with all Doctors|-
+|GET|**/doctor/:doctorId** |Get a Doctor by Id|Admin, Op, User|-|Doctor|-
+|POST|**/doctor** |Create a new Doctor |Admin|**name**|Created Doctor|-
+|PUT|**/doctor/:doctorId** |Update a Doctor by Id|Admin|name|Updated Doctor|-
+|DELETE|**/doctor/:doctorId** |Delete a Doctor by doctorId|Admin|-|Deleted doctor|-
+
+##
+<br>
+
+- ### Specialty
+
+|Verb|Route|Description|Auth.|Body Params|Returns|Notes|
+|-|-|-|-|-|-|-|
+|GET|**/specialty** |Get a list of all Specialtys|Admin, Op, User|-|List with all Specialties|-
+|GET|**/specialty/:specialtyId/doctor** |Get a list of all Doctors by Specialty|Admin, Op, Doc, User|-|List of Doctors|-
+|GET|**/specialty/:specialtyId** |Get a Specialty by Id|Admin, Op, User|-|Specialty|-
+|POST|**/specialty** |Create a new Specialty |Admin|**name**|Created Specialty|-
+|PUT|**/specialty/:specialtyId** |Update a Specialty by Id|Admin|name|Updated Specialty|-
+|DELETE|**/specialty/:specialtyId** |Delete a Specialty by specialtyId|Admin|-|Deleted specialty|-
 
 ##
 
