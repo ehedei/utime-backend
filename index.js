@@ -9,6 +9,7 @@ require('dotenv').config()
 const app = express()
 const { router } = require('./api/routes')
 
+
 mongoose.connect(
   process.env.MONGO_URL || 'mongodb://localhost:27017/',
   {

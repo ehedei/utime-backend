@@ -39,10 +39,10 @@ const userSchema = new mongoose.Schema({
     default: 'user',
     required: ['true', 'Every user must have a role']
   },
-  addresses: [{
+  address: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'address'
-  }]
+  }
 })
 
 exports.UserModel = mongoose.model('user', userSchema)
