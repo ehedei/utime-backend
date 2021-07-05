@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Email field is required'],
     unique: [true, 'Email field must be unique'],
-    match: [
+    match: [ // TODO I don't like the regex
       /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
       'Error: Wrong email format.'
     ]
