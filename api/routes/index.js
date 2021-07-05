@@ -7,9 +7,6 @@ const { doctorRouter } = require('./doctor.router')
 
 router
   .use('/user', userRouter)
-//  .use('/auth')
-
-router
   .use('/booking', bookingRouter)
   .use('/appointment', appointmentRouter)
   .use('/doctor', doctorRouter)
