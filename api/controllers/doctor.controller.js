@@ -1,5 +1,5 @@
-const { AppointmentModel } = require('../models/appointment.model')
 const { DoctorModel } = require('../models/doctor.model')
+const { SpecialtyModel } = require('../models/specialty.model')
 
 exports.getAllDoctors = async (req, res) => {
   try {
@@ -31,8 +31,26 @@ exports.getDoctorById = async (req, res) => {
 
 exports.postNewDoctor = async (req, res) => {
   try {
-    const newDoctor = await DoctorModel.create(req.body)
-    res.status(200).json(newDoctor)
+    let specialties = []
+    if (req.body.specialties) {
+      specialties = await SpecialtyModel.find({ _id: { $in: req.body.specialties } })
+    }
+
+    if (req.body.appointments || (req.body.specialties && specialties.length !== req.body.specialties.length)) {
+      res.status(409).json()
+    } else {
+      req.body.specialties = specialties
+      const newDoctor = await DoctorModel.create(req.body)
+
+      const promises = specialties.map(el => {
+        el.doctors.push(newDoctor._id)
+        return el.save()
+      })
+
+      await Promise.all(promises)
+
+      res.status(200).json(newDoctor)
+    }
   } catch (error) {
     console.log(error)
     res.status(500).json({ msg: 'Error in server' })

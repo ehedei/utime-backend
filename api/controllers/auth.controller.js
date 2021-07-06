@@ -1,4 +1,4 @@
-const { UserModel } = require("../models/user.model")
+const { UserModel } = require('../models/user.model')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 
@@ -11,7 +11,7 @@ exports.login = async (req, res) => {
     if (user) {
       const result = await bcrypt.compare(pass, user.password)
       if (result) {
-        res.status(201).json(generateToken(user))
+        res.status(200).json(generateToken(user))
       } else {
         res.status(401).json({ msg: 'User and password does not match' })
       }
@@ -24,7 +24,7 @@ exports.login = async (req, res) => {
   }
 }
 
-function generateToken(user) {
+function generateToken (user) {
   const userData = { email: user.email, id: user._id, username: user.username }
   const token = jwt.sign(userData,
     process.env.TOKEN_SECRET,
