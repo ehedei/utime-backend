@@ -1,5 +1,6 @@
 const bookingRouter = require('express').Router()
 
+const { checkAuth, checkOpOrAdmin } = require('../../utils/auth')
 const {
   getAllBookings,
   getBookingById,
@@ -7,9 +8,9 @@ const {
   putBookingById
 } = require('../controllers/booking.controller')
 
-bookingRouter.get('/', getAllBookings)
-bookingRouter.get('/:id', getBookingById)
-bookingRouter.post('/', postNewBooking)
-bookingRouter.put('/:id', putBookingById)
+bookingRouter.get('/', checkAuth, checkOpOrAdmin, getAllBookings)
+bookingRouter.get('/:id', checkAuth, checkOpOrAdmin, getBookingById)
+bookingRouter.post('/', checkAuth, checkOpOrAdmin, postNewBooking)
+bookingRouter.put('/:id', checkAuth, checkOpOrAdmin, putBookingById)
 
 exports.bookingRouter = bookingRouter

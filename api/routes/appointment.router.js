@@ -1,5 +1,6 @@
 const appointmentRouter = require('express').Router()
 
+const { checkAuth, checkAdmin, checkOpOrAdmin } = require('../../utils/auth')
 const {
   getAllAppointments,
   getAppointmentById,
@@ -10,8 +11,8 @@ const {
 
 appointmentRouter.get('/', getAllAppointments)
 appointmentRouter.get('/:id', getAppointmentById)
-appointmentRouter.post('/', postNewAppointment)
-appointmentRouter.put('/:id', putAppointmentById)
-appointmentRouter.delete('/:id', deleteAppointmentById)
+appointmentRouter.post('/', checkAuth, checkOpOrAdmin, postNewAppointment)
+appointmentRouter.put('/:id', checkAuth, checkOpOrAdmin, putAppointmentById)
+appointmentRouter.delete('/:id', checkAuth, checkOpOrAdmin, deleteAppointmentById)
 
 exports.appointmentRouter = appointmentRouter
