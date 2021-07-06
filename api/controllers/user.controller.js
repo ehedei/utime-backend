@@ -1,15 +1,14 @@
-const { UserModel } = require("../models/user.model")
-const { AddressModel } = require("../models/address.model")
+const { UserModel } = require('../models/user.model')
+const { AddressModel } = require('../models/address.model')
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
-
+const { BookingModel } = require('../models/booking.model')
 
 // TODO Filter opctions, pagination and limit
 exports.getUsers = async (req, res) => {
   try {
     const users = await UserModel.find()
     res.status(200).json(users)
-
   } catch (error) {
     console.log(error)
     res.status(500).json({ msg: 'Error in server' })
@@ -19,8 +18,8 @@ exports.getUsers = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const user = await UserModel.findById(req.params.id)
-    if(user) {
-      res.status(200).json(removePassFrom(user))
+    if (user) {
+      res.status(200).json(removePassFromUser(user))
     } else {
       res.status(404).json({ msg: 'Resource not found' })
     }
@@ -39,12 +38,12 @@ exports.createUser = async (req, res) => {
 
     const newUser = await prepareUserForCreation(req.body)
 
-    if(newUser.address) {
-      const address = await AddressModel.create([newUser.address], { session: session })
+    if (newUser.address) {
+      const address = await AddressModel.create([newUser.address], { session })
       newUser.address = address[0]
     }
 
-    const user = await UserModel.create([newUser], { session: session })
+    const user = await UserModel.create([newUser], { session })
 
     await session.commitTransaction()
 
@@ -57,34 +56,41 @@ exports.createUser = async (req, res) => {
   }
 }
 
-
 exports.updateUserById = async (req, res) => {
-  let session
-  try {
-    session = await mongoose.startSession()
-    session.startTransaction()
+  if (req.body.bookings) {
+    res.status(409).json({ msg: 'Bad request' })
+  } else {
+    let session
+    try {
+      session = await mongoose.startSession()
+      session.startTransaction()
 
-    const address = req.body.address
-    delete req.body.address
+      const updateData = Object.assign({}, req.body)
+      delete updateData.address
 
-    const user = await UserModel.findByIdAndUpdate(req.params.id, req.body, { new: true }).session(session)
+      const user = await UserModel
+        .findByIdAndUpdate(req.params.id, updateData, { new: true })
+        .populate('address')
+        .session(session)
 
-    if(user) {
-      const newUser = removePassFromUser(user)
-
-      if(address) {
-        const address = await AddressModel.findByIdAndUpdate(user.address, { new: true }).session(session)
-        newUser.addres = address
+      if (user) {
+        if (req.body.address) {
+          for (const prop in req.body.address) {
+            user.address[prop] = req.body.address[prop]
+          }
+          user.address.save({ session })
+        }
+        await session.commitTransaction()
+        res.status(200).json(removePassFromUser(user))
+      } else {
+        res.status(404).json({ msg: 'Resource not found' })
       }
-      res.status(200).json(newUser)
-    } else {
-      res.status(404).json({ msg: 'Resource not found' })
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({ msg: 'Error in server' })
+    } finally {
+      session?.endSession()
     }
-  } catch (error) {
-    console.log(error)
-    res.status(500).json({ msg: 'Error in server' })
-  } finally {
-    session?.endSession()
   }
 }
 
@@ -96,13 +102,25 @@ exports.deleteUserById = async (req, res) => {
     session = await mongoose.startSession()
     session.startTransaction()
 
-    const user = UserModel.findByIdAndDelete(req.params.id).session(session)
-    if(user) {
-      if(user.address) {
-        await user.address.remove().session()
+    const user = await UserModel
+      .findByIdAndDelete(req.params.id)
+      .populate('address')
+      .session(session)
+
+    if (user) {
+      if (user.address) {
+        await user.address.remove({ session })
       }
 
-      res.status(200).json({ msg: "User deleted" })
+      await BookingModel
+        .updateMany({
+          _id: {
+            $in: user.bookings
+          }
+        }, { user: null }).session(session)
+
+      await session.commitTransaction()
+      res.status(200).json({ msg: 'User deleted' })
     } else {
       res.status(404).json({ msg: 'Resource not found' })
     }
@@ -114,7 +132,7 @@ exports.deleteUserById = async (req, res) => {
   }
 }
 
-async function prepareUserForCreation(user) {
+const prepareUserForCreation = async (user) => {
   const newUser = {}
   newUser.email = user.email
   newUser.password = await bcrypt.hash(user.password, 10)
@@ -129,10 +147,11 @@ async function prepareUserForCreation(user) {
   return newUser
 }
 
-
-
-function removePassFromUser (user) {
+const removePassFromUser = (user) => {
   const newUser = JSON.parse(JSON.stringify(user))
   delete newUser.password
   return newUser
 }
+
+exports.prepareUserForCreation = prepareUserForCreation
+exports.removePassFromUser = removePassFromUser
