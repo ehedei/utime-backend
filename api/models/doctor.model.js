@@ -15,7 +15,9 @@ const doctorSchema = new mongoose.Schema({
   }],
   available: {
     type: Boolean,
-    required: [true, 'Available is required']
+    required: [true, 'Available is required'],
+    default: true
+
   }
 })
 
