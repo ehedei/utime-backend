@@ -1,5 +1,6 @@
 const { BookingModel } = require('../models/booking.model')
 const { AppointmentModel } = require('../models/appointment.model')
+const { DoctorModel } = require('../models/doctor.model')
 
 exports.getAllAppointments = async (req, res) => {
   try {
@@ -43,9 +44,10 @@ exports.putAppointmentById = async (req, res) => {
   try {
     const updateById = await AppointmentModel.findById(req.params.id)
     if (updateById) {
-      updateById.start = req.body.start ?? updateById.start
-      updateById.end = req.body.end ?? updateById.end
-      updateById.booking = req.body.booking ?? updateById.booking
+      if (updateById.booking === null) {
+        updateById.start = req.body.start ?? updateById.start
+        updateById.end = req.body.end ?? updateById.end
+      }
       updateById.doctor = req.body.doctor ?? updateById.doctor
       res.status(200).json(updateById)
     } else {
@@ -57,15 +59,17 @@ exports.putAppointmentById = async (req, res) => {
   }
 }
 
+// TODO ln 69 probar $pull
 exports.deleteAppointmentById = async (req, res) => {
   try {
-    const deleteById = await AppointmentModel.findById(req.params.id)
-    if (deleteById) {
-      if (deleteById.booking === null) {
-        const deleteAppointment = await AppointmentModel.deleteById(req.params.id)
+    const findAppointmentById = await AppointmentModel.findById(req.params.id)
+    if (findAppointmentById) {
+      if (findAppointmentById.booking === null) {
+        const deleteAppointment = await AppointmentModel.findByIdAndDelete(req.params.id)
+        const findDoctorAppointment = await DoctorModel.findByIdAndUpdate(findAppointmentById.doctor, { $pull: { appointments: req.params.id } })
         res.status(200).json(deleteAppointment)
       } else {
-        res.status().json({ msg: 'Appointment already assign, you can not delete it' })
+        res.status(403).json({ msg: 'Appointment already assign, you can not delete it' })
       }
     } else {
       res.status(404).json({ msg: 'Resource not found' })

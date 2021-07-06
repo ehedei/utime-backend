@@ -9,9 +9,13 @@ const doctorSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'appointment'
   }],
-  specialty: {
+  specialties: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'specialty'
+  }],
+  available: {
+    type: Boolean,
+    required: [true, 'Available is required']
   }
 })
 

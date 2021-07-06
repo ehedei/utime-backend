@@ -43,8 +43,6 @@ exports.putDoctorById = async (req, res) => {
     const updateById = await DoctorModel.findById(req.params.id)
     if (updateById) {
       updateById.name = req.body.name ?? updateById.name
-      updateById.appointments = updateById.appointment
-      updateById.specialty = req.body.specialty ?? updateById.specialty
       res.status(200).json(updateById)
     } else {
       res.status(404).json({ msg: 'Resource not found' })
