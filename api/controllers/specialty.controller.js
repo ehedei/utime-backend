@@ -31,7 +31,7 @@ exports.getSpecialtyById = async (req, res) => {
 
 exports.getAllDoctorsInSpecialty = async (req, res) => {
   try {
-    const specialtyById = await SpecialtyModel.findById(req.params.id)
+    const specialtyById = await SpecialtyModel.findById(req.params.id).populate('doctors')
     if (specialtyById) {
       res.status(200).json(specialtyById.doctors)
     } else {
@@ -58,6 +58,7 @@ exports.putSpecialtyById = async (req, res) => {
     const updateById = await SpecialtyModel.findById(req.params.id)
     if (updateById) {
       updateById.name = req.body.name ?? updateById.name
+      await updateById.save()
       res.status(200).json(updateById)
     } else {
       res.status(404).json({ msg: 'Resource not found' })
@@ -74,13 +75,18 @@ exports.deleteSpecialtyById = async (req, res) => {
     /*
     const deleteSpecialtyInDoctors = await deleteById.doctors.forEach() element => {
       DoctorModel.findByIdAndUpdate(element, {$pull: { specialties: req.params.id }})
-    });*/
+    });
+    */
 
-    DoctorModel.updateMany({_id: {
-      $in: deleteById.doctors
-    }}, { $pull: { specialties: req.params.id }})
+    if (deleteById) {
+      DoctorModel.updateMany({ _id: {
+        $in: deleteById.doctors
+      } }, { $pull: { specialties: req.params.id } })
 
-    res.status(200).json({ msg: 'Specialty deleted' })
+      res.status(200).json({ msg: 'Specialty deleted' })
+    } else {
+      res.status(404).json({ msg: 'Resource not founded ' })
+    }
   } catch (error) {
     console.log(error)
     res.status(500).json({ msg: 'Error in server' })

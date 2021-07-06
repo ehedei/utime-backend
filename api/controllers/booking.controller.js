@@ -44,10 +44,12 @@ exports.putBookingById = async (req, res) => {
     const updateById = await BookingModel.findById(req.params.id)
     if (updateById) {
       if (req.body.appointment) {
-        const updateAppointmentBooking = await AppointmentModel.findByIdAndUpdate(updateById.appointment, { booking: null })
+        await AppointmentModel.findByIdAndUpdate(updateById.appointment, { booking: null })
         updateById.appointment = req.body.appointment
       }
       updateById.status = req.body.status ?? updateById.status
+
+      updateById.save()
       res.status(200).json(updateById)
     } else {
       res.status(404).json({ msg: 'Resource not found' })

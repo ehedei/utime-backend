@@ -49,6 +49,8 @@ exports.putAppointmentById = async (req, res) => {
         updateById.end = req.body.end ?? updateById.end
       }
       updateById.doctor = req.body.doctor ?? updateById.doctor
+      await updateById.save()
+
       res.status(200).json(updateById)
     } else {
       res.status(404).json({ msg: 'Resource not found' })
@@ -59,14 +61,14 @@ exports.putAppointmentById = async (req, res) => {
   }
 }
 
-// TODO ln 69 probar $pull
+// TODO ln 71 probar $pull
 exports.deleteAppointmentById = async (req, res) => {
   try {
     const findAppointmentById = await AppointmentModel.findById(req.params.id)
     if (findAppointmentById) {
       if (findAppointmentById.booking === null) {
         const deleteAppointment = await AppointmentModel.findByIdAndDelete(req.params.id)
-        const findDoctorAppointment = await DoctorModel.findByIdAndUpdate(findAppointmentById.doctor, { $pull: { appointments: req.params.id } })
+        await DoctorModel.findByIdAndUpdate(findAppointmentById.doctor, { $pull: { appointments: req.params.id } })
         res.status(200).json(deleteAppointment)
       } else {
         res.status(403).json({ msg: 'Appointment already assign, you can not delete it' })
