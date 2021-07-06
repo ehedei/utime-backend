@@ -42,7 +42,11 @@ const userSchema = new mongoose.Schema({
   address: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'address'
-  }
+  },
+  bookings: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'booking'
+  }]
 })
 
 exports.UserModel = mongoose.model('user', userSchema)
