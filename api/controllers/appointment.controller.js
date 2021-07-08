@@ -3,8 +3,9 @@ const { AppointmentModel } = require('../models/appointment.model')
 const { DoctorModel } = require('../models/doctor.model')
 
 exports.getAllAppointments = async (req, res) => {
+  const query = prepareQuery(req.query)
   try {
-    const allAppointments = await AppointmentModel.find()
+    const allAppointments = await AppointmentModel.find(query).sort({ start: 'asc' })
     if (allAppointments) {
       res.status(200).json(allAppointments)
     } else {
@@ -80,4 +81,16 @@ exports.deleteAppointmentById = async (req, res) => {
     console.log(error)
     res.status(500).json({ msg: 'Error in server' })
   }
+}
+
+function prepareQuery (query) {
+  if (query.booking === 'null') {
+    query.booking = null
+  }
+
+  if (query.start) {
+    query.start = { $gte: query.start, $lte: query.start + 'T23:59:59.999+00:00' }
+  }
+
+  return query
 }

@@ -1,6 +1,6 @@
 const appointmentRouter = require('express').Router()
 
-const { checkAuth, checkAdmin, checkOpOrAdmin } = require('../../utils/auth')
+const { checkAuth, checkOpOrAdmin } = require('../../utils/auth')
 const {
   getAllAppointments,
   getAppointmentById,

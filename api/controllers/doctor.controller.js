@@ -3,7 +3,7 @@ const { SpecialtyModel } = require('../models/specialty.model')
 
 exports.getAllDoctors = async (req, res) => {
   try {
-    const allDoctors = await DoctorModel.find()
+    const allDoctors = await DoctorModel.find().populate('specialties')
     if (allDoctors) {
       res.status(200).json(allDoctors)
     } else {

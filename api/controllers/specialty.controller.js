@@ -1,9 +1,10 @@
 const { SpecialtyModel } = require('../models/specialty.model')
 const { DoctorModel } = require('../models/doctor.model')
 
+
 exports.getAllSpecialties = async (req, res) => {
   try {
-    const allSpecialties = await SpecialtyModel.find()
+    const allSpecialties = await SpecialtyModel.find(req.query)
     if (allSpecialties) {
       res.status(200).json(allSpecialties)
     } else {
@@ -15,9 +16,10 @@ exports.getAllSpecialties = async (req, res) => {
   }
 }
 
+
 exports.getSpecialtyById = async (req, res) => {
   try {
-    const specialtyById = await SpecialtyModel.findById(req.params.id)
+    const specialtyById = await SpecialtyModel.findById(req.params.id).populate('doctors')
     if (specialtyById) {
       res.status(200).json(specialtyById)
     } else {
