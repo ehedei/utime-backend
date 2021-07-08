@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
   lastName: String,
   birthdate: {
     type: Date,
-    required: [true, 'Birthdate is required']
+
   },
   phone: {
     type: String
