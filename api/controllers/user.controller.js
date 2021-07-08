@@ -49,7 +49,7 @@ exports.createUser = async (req, res) => {
 
     await session.commitTransaction()
 
-    res.status(201).json(removePassFromUser(user))
+    res.status(201).json(removePassFromUser(user[0]))
   } catch (error) {
     console.log(error)
     res.status(500).json({ msg: 'Error in server' })
@@ -162,7 +162,23 @@ exports.getProfile = async (req, res) => {
 
 exports.getBookingsFromUser = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.params.id).populate('bookings')
+    const user = await UserModel
+      .findById(req.params.id)
+      . populate({
+        path: 'bookings',
+        populate: {
+          path: 'appointment',
+          model: 'appointment',
+          populate: {
+            path: 'doctor',
+            model: 'doctor',
+            populate: {
+              path: 'specialties',
+              model: 'specialty'
+            }
+          }
+        }
+      })
     if (user) {
       res.status(200).json(user.bookings)
     } else {
@@ -184,13 +200,20 @@ exports.createBookingIntoUser = async (req, res) => {
       .findById(req.params.id)
       .session(session)
 
-    if (user) {
-      const booking = await BookingModel.create(req.body, { session })
-      user.bookings.push(booking)
-      user.save({ session })
+    const appointment = await AppointmentModel.findById(req.body.appointment)
 
-      session.commitTransaction()
-      res.status(201).json(booking)
+    if (user && appointment && appointment.booking === null) {
+      req.body.user = user._id
+      const booking = await BookingModel.create([req.body], { session })
+      appointment.booking = booking[0]._id
+      await appointment.save({ session })
+
+      user.bookings.push(booking[0])
+      await user.save({ session })
+
+      await session.commitTransaction()
+
+      res.status(201).json(booking[0])
     } else {
       res.status(404).json({ msg: 'Resource not found' })
     }

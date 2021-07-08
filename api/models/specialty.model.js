@@ -8,7 +8,10 @@ const specialtySchema = new mongoose.Schema({
   doctors: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'doctor'
-  }]
+  }],
+  image: {
+    type: String
+  }
 })
 
 const specialtyModel = mongoose.model('specialty', specialtySchema)
