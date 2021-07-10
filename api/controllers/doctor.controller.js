@@ -93,7 +93,8 @@ exports.createAppointmentsIntoDoctor = async (req, res) => {
 
       if (doctor) {
         const dates = prepareDatesComprobation(query.dates, query.start, query.end)
-        const appointments = await AppointmentModel.find(dates).session(session)
+        const finalQuery = { $and: [{ doctor: query.doctor }, dates] }
+        const appointments = await AppointmentModel.find(finalQuery).session(session)
 
         if (appointments.length > 0) {
           res.status(409).json({ msg: 'Appointments already exist' })
@@ -143,12 +144,14 @@ function prepareMasiveInsertions(query) {
 function prepareDatesComprobation(dates, start, end) {
   const query = {}
   query.$or = dates.map(date => {
-    const startDate = new Date(`${date}T${start}`)
-    const endDate = new Date(`${date}T${end}`)
+    const startDate = moment(`${date}T${start}Z`)
+    const endDate = moment(`${date}T${end}Z`)
 
     return {
-      start: { $gte: startDate },
-      end: { $lte: endDate }
+      $and: [
+        { start: { $gte: startDate.format('YYYY-MM-DDTHH:mm:ss') } },
+        { end: { $lte: endDate.format('YYYY-MM-DDTHH:mm:ss') } }
+      ]
     }
   })
 
