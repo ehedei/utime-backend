@@ -1,9 +1,7 @@
-const { BookingModel } = require('../models/booking.model')
 const { AppointmentModel } = require('../models/appointment.model')
-const { DoctorModel } = require('../models/doctor.model')
 
 exports.getAllAppointments = async (req, res) => {
-  const query = prepareQuery(req.query)
+  const query = prepareSearchQuery(req.query)
   try {
     const allAppointments = await AppointmentModel.find(query).sort({ start: 'asc' })
     if (allAppointments) {
@@ -69,7 +67,7 @@ exports.deleteAppointmentById = async (req, res) => {
     if (findAppointmentById) {
       if (findAppointmentById.booking === null) {
         const deleteAppointment = await AppointmentModel.findByIdAndDelete(req.params.id)
-        await DoctorModel.findByIdAndUpdate(findAppointmentById.doctor, { $pull: { appointments: req.params.id } })
+        // await DoctorModel.findByIdAndUpdate(findAppointmentById.doctor, { $pull: { appointments: req.params.id } })
         res.status(200).json(deleteAppointment)
       } else {
         res.status(403).json({ msg: 'Appointment already assign, you can not delete it' })
@@ -83,7 +81,7 @@ exports.deleteAppointmentById = async (req, res) => {
   }
 }
 
-function prepareQuery (query) {
+function prepareSearchQuery(query) {
   if (query.booking === 'null') {
     query.booking = null
   }

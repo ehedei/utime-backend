@@ -25,7 +25,7 @@ exports.login = async (req, res) => {
 }
 
 function generateToken (user) {
-  const userData = { email: user.email, id: user._id, username: user.username }
+  const userData = { email: user.email, id: user._id, username: user.username, role: user.role }
   const token = jwt.sign(userData,
     process.env.TOKEN_SECRET,
     { expiresIn: '10h' }

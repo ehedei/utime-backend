@@ -1,5 +1,9 @@
 const { DoctorModel } = require('../models/doctor.model')
 const { SpecialtyModel } = require('../models/specialty.model')
+const { AppointmentModel } = require('../models/appointment.model')
+const moment = require('moment')
+const moongose = require('mongoose')
+
 
 exports.getAllDoctors = async (req, res) => {
   try {
@@ -36,8 +40,8 @@ exports.postNewDoctor = async (req, res) => {
       specialties = await SpecialtyModel.find({ _id: { $in: req.body.specialties } })
     }
 
-    if (req.body.appointments || (req.body.specialties && specialties.length !== req.body.specialties.length)) {
-      res.status(409).json()
+    if (req.body.specialties && specialties.length !== req.body.specialties.length) {
+      req.status(409).json({ msg: 'Incorrect format request' })
     } else {
       req.body.specialties = specialties
       const newDoctor = await DoctorModel.create(req.body)
@@ -72,4 +76,81 @@ exports.putDoctorById = async (req, res) => {
     console.log(error)
     res.status(500).json({ msg: 'Error in server' })
   }
+}
+
+exports.createAppointmentsIntoDoctor = async (req, res) => {
+  const query = req.body
+  query.doctor = req.params.id
+
+  if (query.start && query.end && query.minutes && query.dates) {
+    let session
+
+    try {
+      session = await moongose.startSession()
+      session.startTransaction()
+
+      const doctor = await DoctorModel.findById(query.doctor).session(session)
+
+      if (doctor) {
+        const dates = prepareDatesComprobation(query.dates, query.start, query.end)
+        const appointments = await AppointmentModel.find(dates).session(session)
+
+        if (appointments.length > 0) {
+          res.status(409).json({ msg: 'Appointments already exist' })
+        } else {
+          const insertions = prepareMasiveInsertions(query)
+          const newAppointments = await AppointmentModel.create(insertions, { session })
+          await session.commitTransaction()
+          res.status(201).json(newAppointments)
+        }
+      } else {
+        res.status(404).json({ msg: 'Resource not found' })
+      }
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({ msg: 'Error in server' })
+    } finally {
+      session?.endSession()
+    }
+  }
+}
+
+function prepareMasiveInsertions(query) {
+  const insertions = []
+
+  query.dates.forEach(date => {
+    const startDate = moment(`${date} ${query.start}Z`)
+    const endDate = moment(`${date} ${query.end}Z`)
+
+    const index = moment(startDate).add(query.minutes, 'minutes')
+
+    while (endDate.isAfter(index)) {
+      insertions.push({
+        doctor: query.doctor,
+        start: startDate.format('YYYY-MM-DDTHH:mm:ss'),
+        end: index.format('YYYY-MM-DDTHH:mm:ss')
+      })
+
+      index.add(query.minutes, 'minutes')
+      startDate.add(query.minutes, 'minutes')
+    }
+  })
+  console.log(query.dates)
+
+  return insertions
+}
+
+function prepareDatesComprobation(dates, start, end) {
+  const query = {}
+  query.$or = dates.map(date => {
+    const startDate = new Date(`${date}T${start}`)
+    const endDate = new Date(`${date}T${end}`)
+
+    return {
+      start: { $gte: startDate },
+      end: { $lte: endDate }
+    }
+  })
+
+  return query
 }
