@@ -4,7 +4,6 @@ const { AppointmentModel } = require('../models/appointment.model')
 const moment = require('moment')
 const moongose = require('mongoose')
 
-
 exports.getAllDoctors = async (req, res) => {
   try {
     const allDoctors = await DoctorModel.find().populate('specialties')
@@ -116,7 +115,7 @@ exports.createAppointmentsIntoDoctor = async (req, res) => {
   }
 }
 
-function prepareMasiveInsertions(query) {
+function prepareMasiveInsertions (query) {
   const insertions = []
 
   query.dates.forEach(date => {
@@ -141,7 +140,7 @@ function prepareMasiveInsertions(query) {
   return insertions
 }
 
-function prepareDatesComprobation(dates, start, end) {
+function prepareDatesComprobation (dates, start, end) {
   const query = {}
   query.$or = dates.map(date => {
     const startDate = moment(`${date}T${start}Z`)

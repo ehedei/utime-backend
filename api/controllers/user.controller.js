@@ -153,11 +153,10 @@ const updateUser = async (req, res, id) => {
 // TODO Test when auth ready
 exports.getProfile = async (req, res) => {
   const user = await UserModel.findById(res.locals.user.id).populate('address')
+  const newUser = removePassFromUser(user)
+  delete newUser.bookings
 
-  delete user.password
-  delete user.bookings
-
-  res.status.json(user)
+  res.status(200).json({ user: newUser })
 }
 
 exports.getBookingsFromUser = async (req, res) => {
