@@ -277,6 +277,7 @@ const prepareUserForCreation = async (user) => {
 const removePassFromUser = (user) => {
   const newUser = JSON.parse(JSON.stringify(user))
   delete newUser.password
+
   return newUser
 }
 

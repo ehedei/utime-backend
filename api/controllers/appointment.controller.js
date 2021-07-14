@@ -1,4 +1,5 @@
 const { AppointmentModel } = require('../models/appointment.model')
+const moment = require('moment')
 
 exports.getAllAppointments = async (req, res) => {
   const query = prepareSearchQuery(req.query)
@@ -87,7 +88,10 @@ function prepareSearchQuery(query) {
   }
 
   if (query.start) {
-    query.start = { $gte: query.start, $lte: query.start + 'T23:59:59.999+00:00' }
+    const startDate = moment(query.start, 'LT').toDate()
+    const endDate = moment(query.start, 'LT').endOf('day').toDate()
+
+    query.start = { $gte: startDate, $lte: endDate }
   }
 
   return query
