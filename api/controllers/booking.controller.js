@@ -17,7 +17,17 @@ exports.getAllBookings = async (req, res) => {
 
 exports.getBookingById = async (req, res) => {
   try {
-    const bookingById = await BookingModel.findById(req.params.id)
+    const bookingById = await BookingModel.findById(req.params.bookingId).populate({
+      path: 'appointment',
+      populate: {
+        path: 'doctor',
+        model: 'doctor',
+        populate: {
+          path: 'specialties',
+          model: 'specialty'
+        }
+      }
+    })
     if (bookingById) {
       res.status(200).json(bookingById)
     } else {
@@ -41,7 +51,7 @@ exports.postNewBooking = async (req, res) => {
 
 exports.putBookingById = async (req, res) => {
   try {
-    const updateById = await BookingModel.findById(req.params.id)
+    const updateById = await BookingModel.findById(req.params.bookingId)
     if (updateById) {
       if (req.body.appointment) {
         await AppointmentModel.findByIdAndUpdate(updateById.appointment, { booking: null })

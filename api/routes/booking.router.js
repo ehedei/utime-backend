@@ -9,8 +9,8 @@ const {
 } = require('../controllers/booking.controller')
 
 bookingRouter.get('/', checkAuth, checkOpOrAdmin, getAllBookings)
-bookingRouter.get('/:id', checkAuth, checkOpOrAdmin, getBookingById)
+bookingRouter.get('/:bookingId', checkAuth, checkOpOrAdmin, getBookingById)
 bookingRouter.post('/', checkAuth, checkOpOrAdmin, postNewBooking)
-bookingRouter.put('/:id', checkAuth, checkOpOrAdmin, putBookingById)
+bookingRouter.put('/:bookingId', checkAuth, checkOpOrAdmin, putBookingById)
 
 exports.bookingRouter = bookingRouter

@@ -189,6 +189,41 @@ exports.getBookingsFromUser = async (req, res) => {
   }
 }
 
+exports.getBookingFromUserById = async (req, res) => {
+  const query = { _id: req.params.bookingId }
+
+  if (res.locals.user.role === 'user') { query.user = req.params.id }
+
+  try {
+    const booking = await BookingModel
+      .findOne(query)
+      . populate({
+        path: 'bookings',
+        populate: {
+          path: 'appointment',
+          model: 'appointment',
+          populate: {
+            path: 'doctor',
+            model: 'doctor',
+            populate: {
+              path: 'specialties',
+              model: 'specialty'
+            }
+          }
+        }
+      })
+    if (booking) {
+      res.status(200).json(booking)
+    } else {
+      res.status(404).json({ msg: 'Resource not found' })
+    }
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ msg: 'Error in server' })
+  }
+}
+
+
 exports.createBookingIntoUser = async (req, res) => {
   let session
   try {

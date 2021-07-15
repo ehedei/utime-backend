@@ -82,7 +82,7 @@ exports.deleteAppointmentById = async (req, res) => {
   }
 }
 
-function prepareSearchQuery(query) {
+function prepareSearchQuery (query) {
   if (query.booking === 'null') {
     query.booking = null
   }

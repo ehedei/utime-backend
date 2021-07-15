@@ -46,7 +46,6 @@ exports.checkOpOrAdmin = (req, res, next) => {
   }
 }
 
-
 exports.checkOwnerOpOrAdmin = (req, res, next) => {
   const user = res.locals.user
   if (user.role === 'admin' || user.role === 'op' || user._id.toString() === req.params.id) {
