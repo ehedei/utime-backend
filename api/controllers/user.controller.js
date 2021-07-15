@@ -197,18 +197,14 @@ exports.getBookingFromUserById = async (req, res) => {
   try {
     const booking = await BookingModel
       .findOne(query)
-      . populate({
-        path: 'bookings',
+      .populate({
+        path: 'appointment',
         populate: {
-          path: 'appointment',
-          model: 'appointment',
+          path: 'doctor',
+          model: 'doctor',
           populate: {
-            path: 'doctor',
-            model: 'doctor',
-            populate: {
-              path: 'specialties',
-              model: 'specialty'
-            }
+            path: 'specialties',
+            model: 'specialty'
           }
         }
       })
@@ -222,7 +218,6 @@ exports.getBookingFromUserById = async (req, res) => {
     res.status(500).json({ msg: 'Error in server' })
   }
 }
-
 
 exports.createBookingIntoUser = async (req, res) => {
   let session
