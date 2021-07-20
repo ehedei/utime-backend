@@ -142,13 +142,13 @@ function prepareMasiveInsertions (query) {
 function prepareDatesComprobation (dates, start, end) {
   const query = {}
   query.$or = dates.map(date => {
-    const startDate = moment(`${date}T${start}Z`)
-    const endDate = moment(`${date}T${end}Z`)
+    const startDate = `${date}T${start}:00`
+    const endDate = `${date}T${end}:00`
 
     return {
       $and: [
-        { start: { $gte: startDate.format('YYYY-MM-DDTHH:mm:ss') } },
-        { end: { $lte: endDate.format('YYYY-MM-DDTHH:mm:ss') } }
+        { start: { $gte: startDate } },
+        { end: { $lte: endDate } }
       ]
     }
   })

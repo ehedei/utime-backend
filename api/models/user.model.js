@@ -22,8 +22,7 @@ const userSchema = new mongoose.Schema({
   firstName: String,
   lastName: String,
   birthdate: {
-    type: Date,
-
+    type: Date
   },
   phone: {
     type: String
@@ -42,11 +41,7 @@ const userSchema = new mongoose.Schema({
   address: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'address'
-  },
-  bookings: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'booking'
-  }]
+  }
 })
 
 exports.UserModel = mongoose.model('user', userSchema)

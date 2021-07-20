@@ -59,11 +59,7 @@ exports.createUser = async (req, res) => {
 }
 
 exports.updateUserById = async (req, res) => {
-  if (req.body.bookings) {
-    res.status(409).json({ msg: 'Bad request' })
-  } else {
-    updateUser(req, res, req.params.id)
-  }
+  updateUser(req, res, req.params.id)
 }
 
 // TODO Test Bookings
@@ -86,9 +82,7 @@ exports.deleteUserById = async (req, res) => {
 
       await BookingModel
         .updateMany({
-          _id: {
-            $in: user.bookings
-          }
+          user: user._id
         }, { user: null }).session(session)
 
       await session.commitTransaction()
@@ -105,7 +99,7 @@ exports.deleteUserById = async (req, res) => {
 }
 
 exports.updateProfile = async (req, res) => {
-  if (res.body.bookings || res.body.role || res.body._id) {
+  if (res.body.role || res.body._id) {
     res.status(403).json({ msg: 'Access not allowed ' })
   } else {
     updateUser(req, res, res.locals.user._id)
@@ -154,35 +148,30 @@ const updateUser = async (req, res, id) => {
 exports.getProfile = async (req, res) => {
   const user = await UserModel.findById(res.locals.user.id).populate('address')
   const newUser = removePassFromUser(user)
-  delete newUser.bookings
 
   res.status(200).json({ user: newUser })
 }
 
 exports.getBookingsFromUser = async (req, res) => {
+  const query = req.query
+  query.user = req.params.id
+
   try {
-    const user = await UserModel
-      .findById(req.params.id)
-      . populate({
-        path: 'bookings',
+    const bookings = await BookingModel
+      .find(query)
+      .populate({
+        path: 'appointment',
         populate: {
-          path: 'appointment',
-          model: 'appointment',
+          path: 'doctor',
+          model: 'doctor',
           populate: {
-            path: 'doctor',
-            model: 'doctor',
-            populate: {
-              path: 'specialties',
-              model: 'specialty'
-            }
+            path: 'specialties',
+            model: 'specialty'
           }
         }
       })
-    if (user) {
-      res.status(200).json(user.bookings)
-    } else {
-      res.status(404).json({ msg: 'Resource not found' })
-    }
+
+    res.status(200).json(bookings)
   } catch (error) {
     console.log(error)
     res.status(500).json({ msg: 'Error in server' })
@@ -236,9 +225,6 @@ exports.createBookingIntoUser = async (req, res) => {
       const booking = await BookingModel.create([req.body], { session })
       appointment.booking = booking[0]._id
       await appointment.save({ session })
-
-      user.bookings.push(booking[0])
-      await user.save({ session })
 
       await session.commitTransaction()
 
