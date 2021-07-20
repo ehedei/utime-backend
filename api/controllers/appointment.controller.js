@@ -82,21 +82,32 @@ exports.deleteAppointmentById = async (req, res) => {
   }
 }
 
-function prepareSearchQuery (query) {
+function prepareSearchQuery(query) {
+  const newQuery = {}
+
   if (query.booking === 'null') {
-    query.booking = null
+    newQuery.booking = null
   }
 
-  console.log(query.start)
+  if (query.doctor) {
+    newQuery.doctor = query.doctor
+  }
 
   if (query.start) {
-    const startDate = moment(query.start, 'LT').toDate()
-    const endDate = moment(query.start, 'LT').endOf('day').toDate()
-
-    query.start = { $gte: startDate, $lte: endDate }
+    const startDate = moment(query.start, 'YYYY-MM-DD hh:mm:ss').toDate()
+    if (!newQuery.start) {
+      newQuery.start = {}
+    }
+    newQuery.start.$gte = startDate
   }
 
-  console.log(query)
+  if (query.end) {
+    const endDate = moment(query.end, 'YYYY-MM-DD hh:mm:ss').toDate()
+    if (!newQuery.start) {
+      newQuery.start = {}
+    }
+    newQuery.start.$lte = endDate
+  }
 
-  return query
+  return newQuery
 }
