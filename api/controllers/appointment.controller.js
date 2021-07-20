@@ -87,12 +87,16 @@ function prepareSearchQuery (query) {
     query.booking = null
   }
 
+  console.log(query.start)
+
   if (query.start) {
     const startDate = moment(query.start, 'LT').toDate()
     const endDate = moment(query.start, 'LT').endOf('day').toDate()
 
     query.start = { $gte: startDate, $lte: endDate }
   }
+
+  console.log(query)
 
   return query
 }
