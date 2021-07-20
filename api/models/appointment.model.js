@@ -9,6 +9,15 @@ const appointmentSchema = new mongoose.Schema({
     type: Date,
     required: [true, 'End date is required']
   },
+  inAt: {
+    type: Date,
+    default: null
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'no-show', 'finished', 'inside'],
+    default: 'pending'
+  },
   booking: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'booking',

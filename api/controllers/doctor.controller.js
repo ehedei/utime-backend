@@ -6,7 +6,7 @@ const moongose = require('mongoose')
 
 exports.getAllDoctors = async (req, res) => {
   try {
-    const allDoctors = await DoctorModel.find().populate('specialties')
+    const allDoctors = await DoctorModel.find().populate('specialties').sort('name')
     if (allDoctors) {
       res.status(200).json(allDoctors)
     } else {
