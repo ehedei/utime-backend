@@ -3,7 +3,7 @@ const { UserModel } = require('../api/models/user.model')
 
 exports.checkAuth = async (req, res, next) => {
   try {
-    const rawToken = req.headers.authorization.replace('token ', '')
+    const rawToken = req.headers.authorization.replace('Bearer ', '')
 
     const token = await jwt.verify(rawToken, process.env.TOKEN_SECRET)
     const user = await UserModel.findById(token.id)
