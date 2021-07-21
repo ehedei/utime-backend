@@ -18,7 +18,23 @@ exports.getAllAppointments = async (req, res) => {
 
 exports.getAppointmentById = async (req, res) => {
   try {
-    const appointmentById = await AppointmentModel.findById(req.params.id)
+    const appointmentById = await AppointmentModel
+      .findById(req.params.id)
+      .populate({
+        path: 'doctor',
+        populate: {
+          path: 'specialties',
+          model: 'specialty'
+        }
+      })
+      .populate({
+        path: 'booking',
+        populate: {
+          path: 'user',
+          model: 'user',
+          select: '-password'
+        }
+      })
     if (appointmentById) {
       res.status(200).json(appointmentById)
     } else {

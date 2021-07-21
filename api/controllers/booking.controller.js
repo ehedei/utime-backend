@@ -27,7 +27,7 @@ exports.getBookingById = async (req, res) => {
           model: 'specialty'
         }
       }
-    })
+    }).populate('user', '-password')
     if (bookingById) {
       res.status(200).json(bookingById)
     } else {

@@ -27,8 +27,8 @@ io.on('connection', async (socket) => {
       booking: { $ne: null },
       status: 'pending',
       start: {
-        $gte: moment().startOf('day').toDate(),
-        $lte: moment().endOf('day').toDate()
+        $gte: moment.utc().startOf('day').toDate(),
+        $lte: moment.utc().endOf('day').toDate()
       }
     }).select({ booking: 0 }).sort('start')
 
@@ -37,22 +37,25 @@ io.on('connection', async (socket) => {
       booking: { $ne: null },
       status: { $in: ['inside', 'no-show'] },
       start: {
-        $gte: moment().startOf('day').toDate(),
-        $lte: moment().endOf('day').toDate()
+        $gte: moment.utc().startOf('day').toDate(),
+        $lte: moment.utc().endOf('day').toDate()
       }
     }).select({ booking: 0 }).sort('-start')
 
     io.to(socket.id).emit('update', doctorId, appointments, activeAppointment)
   })
 
-  socket.on('check-in', async (actualAppointment, nextAppointment) => {
+  socket.on('check-in', async (actualAppointment, nextAppointment, updatedTime) => {
     const doctorId = nextAppointment.doctor
 
     await AppointmentModel
       .findByIdAndUpdate(nextAppointment._id, { status: 'finished' })
 
     const updatedAppointment = await AppointmentModel
-      .findByIdAndUpdate(nextAppointment._id, { inAt: new Date(), status: 'inside' }, { new: true })
+      .findByIdAndUpdate(nextAppointment._id, {
+        inAt: moment.utc(updatedTime, 'YYYY-MM-DD HH:mm:ss').toDate(),
+        status: 'inside'
+      }, { new: true })
       .select({ booking: 0 })
 
     const appointments = await AppointmentModel.find({
@@ -61,22 +64,25 @@ io.on('connection', async (socket) => {
       inAt: null,
       status: 'pending',
       start: {
-        $gte: moment().startOf('day').toDate(),
-        $lte: moment().endOf('day').toDate()
+        $gte: moment.utc().startOf('day').toDate(),
+        $lte: moment.utc().endOf('day').toDate()
       }
     }).select({ booking: 0 }).sort('start')
 
     io.to(doctorId).emit('update', doctorId, appointments, updatedAppointment)
   })
 
-  socket.on('no-show', async (actualAppointment, nextAppointment) => {
+  socket.on('no-show', async (actualAppointment, nextAppointment, updatedTime) => {
     const doctorId = nextAppointment.doctor
 
     await AppointmentModel
       .findByIdAndUpdate(nextAppointment._id, { status: 'finished' })
 
     const updatedAppointment = await AppointmentModel
-      .findByIdAndUpdate(nextAppointment._id, { inAt: new Date(), status: 'no-show' }, { new: true })
+      .findByIdAndUpdate(nextAppointment._id, {
+        inAt: moment.utc(updatedTime, 'YYYY-MM-DD HH:mm:ss').toDate(),
+        status: 'no-show'
+      }, { new: true })
       .select({ booking: 0 })
 
     await BookingModel.findByIdAndUpdate(updatedAppointment.booking, { status: 'no-show' })
@@ -87,8 +93,8 @@ io.on('connection', async (socket) => {
       inAt: null,
       status: 'pending',
       start: {
-        $gte: moment().startOf('day').toDate(),
-        $lte: moment().endOf('day').toDate()
+        $gte: moment.utc().startOf('day').toDate(),
+        $lte: moment.utc().endOf('day').toDate()
       }
     }).select({ booking: 0 }).sort('start')
 
