@@ -119,16 +119,16 @@ function prepareMasiveInsertions (query) {
   const insertions = []
 
   query.dates.forEach(date => {
-    const startDate = moment(`${date} ${query.start}`, 'YYYY-MM-DD hh:mm:ss')
-    const endDate = moment(`${date} ${query.end}`, 'YYYY-MM-DD hh:mm:ss')
+    const startDate = moment.utc(`${date} ${query.start}`, 'YYYY-MM-DD hh:mm:ss')
+    const endDate = moment.utc(`${date} ${query.end}`, 'YYYY-MM-DD hh:mm:ss')
 
     const index = moment.utc(startDate).add(query.minutes, 'minutes')
 
     while (endDate.isSameOrAfter(index)) {
       insertions.push({
         doctor: query.doctor,
-        start: startDate.utc().toDate(),
-        end: index.utc().toDate()
+        start: startDate.toDate(),
+        end: index.toDate()
       })
 
       index.add(query.minutes, 'minutes')

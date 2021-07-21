@@ -1,7 +1,6 @@
 const { SpecialtyModel } = require('../models/specialty.model')
 const { DoctorModel } = require('../models/doctor.model')
 
-
 exports.getAllSpecialties = async (req, res) => {
   try {
     const allSpecialties = await SpecialtyModel.find(req.query)
@@ -15,7 +14,6 @@ exports.getAllSpecialties = async (req, res) => {
     res.status(500).json({ msg: 'Error in server' })
   }
 }
-
 
 exports.getSpecialtyById = async (req, res) => {
   try {
@@ -81,9 +79,11 @@ exports.deleteSpecialtyById = async (req, res) => {
     */
 
     if (deleteById) {
-      DoctorModel.updateMany({ _id: {
-        $in: deleteById.doctors
-      } }, { $pull: { specialties: req.params.id } })
+      DoctorModel.updateMany({
+        _id: {
+          $in: deleteById.doctors
+        }
+      }, { $pull: { specialties: req.params.id } })
 
       res.status(200).json({ msg: 'Specialty deleted' })
     } else {
