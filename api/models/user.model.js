@@ -32,6 +32,9 @@ const userSchema = new mongoose.Schema({
     type: String
     // TODO match telephone
   },
+  image: {
+    type: String
+  },
   role: {
     type: String,
     enum: ['admin', 'doc', 'op', 'user'],

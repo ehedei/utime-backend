@@ -20,7 +20,6 @@ exports.getUserById = async (req, res) => {
   try {
     const user = await UserModel.findById(req.params.id, { password: 0 })
     if (user) {
-      console.log(user)
       res.status(200).json(removePassFromUser(user))
     } else {
       res.status(404).json({ msg: 'Resource not found' })
