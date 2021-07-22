@@ -18,9 +18,9 @@ exports.getUsers = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.params.id, { password: 0 })
+    const user = await UserModel.findById(req.params.id).select({ password: 0 }).populate('address')
     if (user) {
-      res.status(200).json(removePassFromUser(user))
+      res.status(200).json(user)
     } else {
       res.status(404).json({ msg: 'Resource not found' })
     }

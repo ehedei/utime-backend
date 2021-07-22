@@ -11,6 +11,7 @@ const {
 
 appointmentRouter.get('/', getAllAppointments)
 appointmentRouter.get('/:id', getAppointmentById)
+// TODO appointmentRouter.get('/:id', checkAuth, checkOpOrAdmin, getAppointmentById)
 appointmentRouter.post('/', checkAuth, checkOpOrAdmin, postNewAppointment)
 appointmentRouter.put('/:id', checkAuth, checkOpOrAdmin, putAppointmentById)
 appointmentRouter.delete('/:id', checkAuth, checkOpOrAdmin, deleteAppointmentById)
