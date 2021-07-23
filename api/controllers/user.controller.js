@@ -4,6 +4,8 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const { BookingModel } = require('../models/booking.model')
 const { AppointmentModel } = require('../models/appointment.model')
+const moment = require('moment')
+// const { waitingRoom } = require('../../sockets/index')
 
 // TODO Filter options, pagination and limit
 exports.getUsers = async (req, res) => {
@@ -219,7 +221,7 @@ exports.createBookingIntoUser = async (req, res) => {
 
     const appointment = await AppointmentModel.findById(req.body.appointment)
 
-    if (user && appointment && appointment.booking === null) {
+    if (user && appointment && appointment.booking === null && checkDateNow(appointment.start)) {
       req.body.user = user._id
       const booking = await BookingModel.create([req.body], { session })
       appointment.booking = booking[0]._id
@@ -294,6 +296,13 @@ const removePassFromUser = (user) => {
   delete newUser.password
 
   return newUser
+}
+
+function checkDateNow (startString) {
+  const now = moment.utc()
+  const start = moment.utc(startString)
+
+  return now.isAfter(start)
 }
 
 exports.prepareUserForCreation = prepareUserForCreation

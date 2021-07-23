@@ -2,6 +2,7 @@ const { AppointmentModel } = require('../api/models/appointment.model')
 const moment = require('moment')
 const { http } = require('../httpserver')
 const { BookingModel } = require('../api/models/booking.model')
+
 const io = require('socket.io')(http, {
   cors: {
     origin: '*',
@@ -9,6 +10,7 @@ const io = require('socket.io')(http, {
   }
 })
 
+const { waitingRoom } = require('./waitingroom')
 const rooms = {}
 
 io.on('connection', async (socket) => {
@@ -45,32 +47,7 @@ io.on('connection', async (socket) => {
     io.to(socket.id).emit('update', doctorId, appointments, activeAppointment)
   })
 
-  socket.on('check-in', async (actualAppointment, nextAppointment, updatedTime) => {
-    const doctorId = nextAppointment.doctor
-
-    await AppointmentModel
-      .findByIdAndUpdate(nextAppointment._id, { status: 'finished' })
-
-    const updatedAppointment = await AppointmentModel
-      .findByIdAndUpdate(nextAppointment._id, {
-        inAt: moment.utc(updatedTime, 'YYYY-MM-DD HH:mm:ss').toDate(),
-        status: 'inside'
-      }, { new: true })
-      .select({ booking: 0 })
-
-    const appointments = await AppointmentModel.find({
-      doctor: doctorId,
-      booking: { $ne: null },
-      inAt: null,
-      status: 'pending',
-      start: {
-        $gte: moment.utc().startOf('day').toDate(),
-        $lte: moment.utc().endOf('day').toDate()
-      }
-    }).select({ booking: 0 }).sort('start')
-
-    io.to(doctorId).emit('update', doctorId, appointments, updatedAppointment)
-  })
+  socket.on('check-in', waitingRoom.checkIn)
 
   socket.on('no-show', async (actualAppointment, nextAppointment, updatedTime) => {
     const doctorId = nextAppointment.doctor
@@ -103,3 +80,4 @@ io.on('connection', async (socket) => {
 })
 
 exports.io = io
+exports.waitingRoom = waitingRoom

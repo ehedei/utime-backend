@@ -110,15 +110,16 @@ function prepareSearchQuery(query) {
   }
 
   if (query.start) {
-    const startDate = moment(query.start, 'YYYY-MM-DD hh:mm:ss').toDate()
+    const startDate = moment.utc(query.start, 'YYYY-MM-DD hh:mm:ss').toDate()
     if (!newQuery.start) {
       newQuery.start = {}
     }
+
     newQuery.start.$gte = startDate
   }
 
   if (query.end) {
-    const endDate = moment(query.end, 'YYYY-MM-DD hh:mm:ss').toDate()
+    const endDate = moment.utc(query.end, 'YYYY-MM-DD hh:mm:ss').toDate()
     if (!newQuery.start) {
       newQuery.start = {}
     }
