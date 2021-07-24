@@ -5,7 +5,6 @@ const bcrypt = require('bcrypt')
 const { BookingModel } = require('../models/booking.model')
 const { AppointmentModel } = require('../models/appointment.model')
 const moment = require('moment')
-// const { waitingRoom } = require('../../sockets/index')
 
 // TODO Filter options, pagination and limit
 exports.getUsers = async (req, res) => {
@@ -145,7 +144,6 @@ const updateUser = async (req, res, id) => {
   }
 }
 
-// TODO Test when auth ready
 exports.getProfile = async (req, res) => {
   const user = await UserModel.findById(res.locals.user.id).populate('address')
   const newUser = removePassFromUser(user)
@@ -154,7 +152,14 @@ exports.getProfile = async (req, res) => {
 }
 
 exports.getBookingsFromUser = async (req, res) => {
-  const query = req.query
+  let match = {}
+
+  if (req.query.start) {
+    match = { start: { $gte: moment.utc(req.query.start, 'YYYY-MM-DD HH:mm:ss').toDate() } }
+  }
+
+  const query = {}
+
   query.user = req.params.id
 
   try {
@@ -162,6 +167,7 @@ exports.getBookingsFromUser = async (req, res) => {
       .find(query)
       .populate({
         path: 'appointment',
+        match,
         populate: {
           path: 'doctor',
           model: 'doctor',
@@ -172,7 +178,7 @@ exports.getBookingsFromUser = async (req, res) => {
         }
       })
 
-    res.status(200).json(bookings)
+    res.status(200).json(bookings.filter(el => el.appointment))
   } catch (error) {
     console.log(error)
     res.status(500).json({ msg: 'Error in server' })
@@ -209,7 +215,7 @@ exports.getBookingFromUserById = async (req, res) => {
   }
 }
 
-exports.createBookingIntoUser = async (req, res) => {
+exports.createBookingIntoUser = async (req, res, next) => {
   let session
   try {
     session = await mongoose.startSession()
@@ -219,17 +225,18 @@ exports.createBookingIntoUser = async (req, res) => {
       .findById(req.params.id)
       .session(session)
 
-    const appointment = await AppointmentModel.findById(req.body.appointment)
+    const appointment = await AppointmentModel.findById(req.body.appointment).session(session)
 
-    if (user && appointment && appointment.booking === null && checkDateNow(appointment.start)) {
+    if (user && appointment && appointment.booking === null && checkDates(req.body.date, appointment.start)) {
       req.body.user = user._id
       const booking = await BookingModel.create([req.body], { session })
       appointment.booking = booking[0]._id
       await appointment.save({ session })
-
+      res.locals.appointment = appointment
       await session.commitTransaction()
 
       res.status(201).json(booking[0])
+      next()
     } else {
       res.status(404).json({ msg: 'Resource not found' })
     }
@@ -241,7 +248,7 @@ exports.createBookingIntoUser = async (req, res) => {
   }
 }
 
-exports.updateBookingIntoUser = async (req, res) => {
+exports.updateBookingIntoUser = async (req, res, next) => {
   let session
   try {
     session = await mongoose.startSession()
@@ -252,16 +259,16 @@ exports.updateBookingIntoUser = async (req, res) => {
       .session(session)
 
     if (booking) {
-      if (req.params.id === booking.user.toString()) {
-        if (req.body.status === 'cancelled') {
-          booking.status = 'cancelled'
-          await AppointmentModel
-            .findByIdAndUpdate(booking.appointment, { booking: null }, { new: true })
-            .session(session)
-          booking.save({ session })
-        }
+      if (req.params.id === booking.user.toString() && req.body.status === 'cancelled') {
+        booking.status = 'cancelled'
+        const appointment = await AppointmentModel
+          .findByIdAndUpdate(booking.appointment, { booking: null }, { new: true })
+          .session(session)
+        booking.save({ session })
+        res.locals.appointment = appointment
         session.commitTransaction()
         res.status(200).json(booking)
+        next()
       } else {
         res.status(403).json({ msg: 'Access not allowed' })
       }
@@ -298,11 +305,11 @@ const removePassFromUser = (user) => {
   return newUser
 }
 
-function checkDateNow (startString) {
-  const now = moment.utc()
+function checkDates (todayString, startString) {
+  const now = moment.utc(todayString, 'YYYY-MM-DD HH:mm:ss')
   const start = moment.utc(startString)
 
-  return now.isAfter(start)
+  return start.isAfter(now)
 }
 
 exports.prepareUserForCreation = prepareUserForCreation

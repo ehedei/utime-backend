@@ -77,14 +77,12 @@ exports.putAppointmentById = async (req, res) => {
   }
 }
 
-// TODO ln 71 probar $pull
 exports.deleteAppointmentById = async (req, res) => {
   try {
     const findAppointmentById = await AppointmentModel.findById(req.params.id)
     if (findAppointmentById) {
       if (findAppointmentById.booking === null) {
         const deleteAppointment = await AppointmentModel.findByIdAndDelete(req.params.id)
-        // await DoctorModel.findByIdAndUpdate(findAppointmentById.doctor, { $pull: { appointments: req.params.id } })
         res.status(200).json(deleteAppointment)
       } else {
         res.status(403).json({ msg: 'Appointment already assign, you can not delete it' })
