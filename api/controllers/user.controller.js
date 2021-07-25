@@ -129,7 +129,7 @@ const updateUser = async (req, res, id) => {
         for (const prop in req.body.address) {
           user.address[prop] = req.body.address[prop]
         }
-        user.address.save({ session })
+        await user.address.save({ session })
       }
       await session.commitTransaction()
       res.status(200).json(removePassFromUser(user))
@@ -161,6 +161,7 @@ exports.getBookingsFromUser = async (req, res) => {
   const query = {}
 
   query.user = req.params.id
+  query.status = req.query.status
 
   try {
     const bookings = await BookingModel
@@ -259,14 +260,17 @@ exports.updateBookingIntoUser = async (req, res, next) => {
       .session(session)
 
     if (booking) {
-      if (req.params.id === booking.user.toString() && req.body.status === 'cancelled') {
-        booking.status = 'cancelled'
+      if (req.params.id === booking.user.toString() && req.body.status === 'cancelled' && booking.status === 'booked') {
         const appointment = await AppointmentModel
           .findByIdAndUpdate(booking.appointment, { booking: null }, { new: true })
           .session(session)
-        booking.save({ session })
+
+        booking.status = 'cancelled'
+        booking.appointment = null
+        await booking.save({ session })
         res.locals.appointment = appointment
-        session.commitTransaction()
+
+        await session.commitTransaction()
         res.status(200).json(booking)
         next()
       } else {

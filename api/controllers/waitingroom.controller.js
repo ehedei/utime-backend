@@ -4,7 +4,6 @@ const moment = require('moment')
 const sendUpdateToDoctorQueue = async (req, res) => {
   const io = req.app.get('socketIo')
   const doctorId = res.locals.appointment.doctor.toString()
-  console.log(doctorId)
 
   const appointments = await waitingRoom.getAppointments(doctorId)
   const activeAppointment = await waitingRoom.getActiveAppointment(doctorId)

@@ -1,16 +1,21 @@
+const mongoose = require('mongoose')
 const { AppointmentModel } = require('../api/models/appointment.model')
 const { BookingModel } = require('../api/models/booking.model')
 const moment = require('moment')
 
 exports.changeStatus = async (io, socket, { doctorId, actualAppointment, nextAppointment, updatedTime, status }) => {
+  let session
   try {
+    session = await mongoose.startSession()
+    session.startTransaction()
+
     if (actualAppointment) {
       if (actualAppointment.status === 'no-show') {
-        await BookingModel.findByIdAndUpdate(actualAppointment.booking, { status: 'no-show' })
+        await BookingModel.findByIdAndUpdate(actualAppointment.booking, { status: 'no-show' }).session(session)
       } else {
         await AppointmentModel
-          .findByIdAndUpdate(actualAppointment._id, { status: 'finished' })
-        await BookingModel.findByIdAndUpdate(actualAppointment.booking, { status: 'finished' })
+          .findByIdAndUpdate(actualAppointment._id, { status: 'finished' }).session(session)
+        await BookingModel.findByIdAndUpdate(actualAppointment.booking, { status: 'finished' }).session(session)
       }
     }
 
@@ -19,9 +24,11 @@ exports.changeStatus = async (io, socket, { doctorId, actualAppointment, nextApp
         inAt: moment.utc(updatedTime, 'YYYY-MM-DD HH:mm:ss').toDate(),
         status
       }, { new: true })
-      .select({ booking: 0 })
+      .select({ booking: 0 }).session(session)
 
-    const appointments = await getAppointments(doctorId)
+    const appointments = await getAppointments(doctorId, session)
+
+    await session.commitTransaction()
 
     io.to(doctorId).emit('update', doctorId, appointments, updatedAppointment)
   } catch (error) {
@@ -45,7 +52,7 @@ exports.connectToDoctorRoom = async (io, socket, doctorId) => {
   }
 }
 
-const getAppointments = async (doctorId) => {
+const getAppointments = async (doctorId, session = null) => {
   return await AppointmentModel.find({
     doctor: doctorId,
     booking: { $ne: null },
@@ -55,7 +62,7 @@ const getAppointments = async (doctorId) => {
       $gte: moment.utc().startOf('day').toDate(),
       $lte: moment.utc().endOf('day').toDate()
     }
-  }).select({ booking: 0 }).sort('start')
+  }).select({ booking: 0 }).sort('start').session(session)
 }
 
 const getActiveAppointment = async (doctorId) => {
