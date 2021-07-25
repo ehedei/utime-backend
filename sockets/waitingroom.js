@@ -11,11 +11,13 @@ exports.changeStatus = async (io, socket, { doctorId, actualAppointment, nextApp
 
     if (actualAppointment) {
       if (actualAppointment.status === 'no-show') {
-        await BookingModel.findByIdAndUpdate(actualAppointment.booking, { status: 'no-show' }).session(session)
+        const appointment = await AppointmentModel
+          .findById(actualAppointment._id).session(session)
+        await BookingModel.findByIdAndUpdate(appointment.booking, { status: 'no-show' }).session(session)
       } else {
-        await AppointmentModel
+        const appointment = await AppointmentModel
           .findByIdAndUpdate(actualAppointment._id, { status: 'finished' }).session(session)
-        await BookingModel.findByIdAndUpdate(actualAppointment.booking, { status: 'finished' }).session(session)
+        await BookingModel.findByIdAndUpdate(appointment.booking, { status: 'finished' }).session(session)
       }
     }
 
