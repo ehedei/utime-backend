@@ -146,7 +146,7 @@ const updateUser = async (req, res, id) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const user = await UserModel.findById(res.locals.user.id).populate('address').select('password')
+    const user = await UserModel.findById(res.locals.user.id).populate('address').select('-password')
     res.status(200).json({ user })
   } catch (error) {
     console.log(error)
