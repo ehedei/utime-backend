@@ -93,10 +93,10 @@ exports.createAppointmentsIntoDoctor = async (req, res) => {
       if (doctor) {
         const dates = prepareDatesComprobation(query.dates, query.start, query.end)
         const finalQuery = { $and: [{ doctor: query.doctor }, dates] }
-        const appointments = await AppointmentModel.find(finalQuery).session(session)
+        const appointments = await AppointmentModel.find(finalQuery).select({ booking: 0, doctor: 0 }).sort('start').session(session)
 
         if (appointments.length > 0) {
-          res.status(409).json({ msg: 'Appointments already exist' })
+          res.status(409).json({ msg: 'Appointments already exist', appointments })
         } else {
           const insertions = prepareMasiveInsertions(query)
           const newAppointments = await AppointmentModel.create(insertions, { session })

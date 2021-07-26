@@ -145,10 +145,13 @@ const updateUser = async (req, res, id) => {
 }
 
 exports.getProfile = async (req, res) => {
-  const user = await UserModel.findById(res.locals.user.id).populate('address')
-  const newUser = removePassFromUser(user)
-
-  res.status(200).json({ user: newUser })
+  try {
+    const user = await UserModel.findById(res.locals.user.id).populate('address').select('password')
+    res.status(200).json({ user })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ msg: 'Error in server' })
+  }
 }
 
 exports.getBookingsFromUser = async (req, res) => {
