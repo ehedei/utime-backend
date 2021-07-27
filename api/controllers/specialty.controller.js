@@ -72,12 +72,6 @@ exports.putSpecialtyById = async (req, res) => {
 exports.deleteSpecialtyById = async (req, res) => {
   try {
     const deleteById = await SpecialtyModel.findByIdAndDelete(req.params.id)
-    /*
-    const deleteSpecialtyInDoctors = await deleteById.doctors.forEach() element => {
-      DoctorModel.findByIdAndUpdate(element, {$pull: { specialties: req.params.id }})
-    });
-    */
-
     if (deleteById) {
       DoctorModel.updateMany({
         _id: {

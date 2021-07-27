@@ -5,12 +5,6 @@ const doctorSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Name is required']
   },
-  /*
-  appointments: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'appointment'
-  }],
-  */
   specialties: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'specialty'
