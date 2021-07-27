@@ -3,30 +3,16 @@ const { AppointmentModel } = require('../api/models/appointment.model')
 const { BookingModel } = require('../api/models/booking.model')
 const moment = require('moment')
 
-exports.changeStatus = async (io, socket, { doctorId, actualAppointment, nextAppointment, updatedTime, status }) => {
+exports.changeStatus = async (io, socket, socketData) => {
+  const { doctorId, actualAppointment, nextAppointment, updatedTime, status } = socketData
   let session
   try {
     session = await mongoose.startSession()
     session.startTransaction()
 
-    if (actualAppointment) {
-      if (actualAppointment.status === 'no-show') {
-        const appointment = await AppointmentModel
-          .findById(actualAppointment._id).session(session)
-        await BookingModel.findByIdAndUpdate(appointment.booking, { status: 'no-show' }).session(session)
-      } else {
-        const appointment = await AppointmentModel
-          .findByIdAndUpdate(actualAppointment._id, { status: 'finished' }).session(session)
-        await BookingModel.findByIdAndUpdate(appointment.booking, { status: 'finished' }).session(session)
-      }
-    }
+    await updateActualAppointment(actualAppointment, session)
 
-    const updatedAppointment = await AppointmentModel
-      .findByIdAndUpdate(nextAppointment._id, {
-        inAt: moment.utc(updatedTime, 'YYYY-MM-DD HH:mm:ss').toDate(),
-        status
-      }, { new: true })
-      .select({ booking: 0 }).session(session)
+    const updatedAppointment = await updateNextAppointment(nextAppointment, updatedTime, status, session)
 
     const appointments = await getAppointments(doctorId, session)
 
@@ -34,8 +20,9 @@ exports.changeStatus = async (io, socket, { doctorId, actualAppointment, nextApp
 
     io.to(doctorId).emit('update', doctorId, appointments, updatedAppointment)
   } catch (error) {
-    console.log(error)
     io.to(socket.id).emit('error-on-update', doctorId)
+  } finally {
+    session?.endSession()
   }
 }
 
@@ -77,6 +64,29 @@ const getActiveAppointment = async (doctorId) => {
       $lte: moment.utc().endOf('day').toDate()
     }
   }).select({ booking: 0 }).sort('-start')
+}
+
+const updateActualAppointment = async (actualAppointment, session) => {
+  if (actualAppointment) {
+    if (actualAppointment.status === 'no-show') {
+      const appointment = await AppointmentModel
+        .findById(actualAppointment._id).session(session)
+      await BookingModel.findByIdAndUpdate(appointment.booking, { status: 'no-show' }).session(session)
+    } else {
+      const appointment = await AppointmentModel
+        .findByIdAndUpdate(actualAppointment._id, { status: 'finished' }).session(session)
+      await BookingModel.findByIdAndUpdate(appointment.booking, { status: 'finished' }).session(session)
+    }
+  }
+}
+
+const updateNextAppointment = async (nextAppointment, updatedTime, status, session) => {
+  return await AppointmentModel
+    .findByIdAndUpdate(nextAppointment._id, {
+      inAt: moment.utc(updatedTime, 'YYYY-MM-DD HH:mm:ss').toDate(),
+      status
+    }, { new: true })
+    .select({ booking: 0 }).session(session)
 }
 
 exports.getActiveAppointment = getActiveAppointment
