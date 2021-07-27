@@ -99,7 +99,7 @@ exports.deleteUserById = async (req, res) => {
 }
 
 exports.updateProfile = async (req, res) => {
-  if (res.body.role || res.body._id) {
+  if (req.body.role || req.body._id) {
     res.status(403).json({ msg: 'Access not allowed ' })
   } else {
     updateUser(req, res, res.locals.user._id)
